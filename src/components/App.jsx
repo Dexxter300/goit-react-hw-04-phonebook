@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { nanoid } from 'nanoid';
 
 import { Form } from './form/form';
@@ -6,14 +6,41 @@ import { List } from './list/list';
 import { Filter } from './filter/filter';
 
 export const App = () => {
-  const [contacts, setContacts] = useState([
-    { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-    { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-    { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-    { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-  ]);
+  const [contacts, setContacts] = useState([]);
   const [filter, setFilter] = useState('');
   let filteredList = null;
+  const didMount = useRef(false);
+
+  useEffect(() => {
+    // console.log('lololo');
+    if (localStorage.getItem('contacts') === null) {
+      localStorage.setItem(
+        'contacts',
+        JSON.stringify([
+          { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
+          { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
+          { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
+          { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
+        ])
+      );
+      setContacts(JSON.parse(localStorage.getItem('contacts')));
+      return;
+    }
+    if (localStorage.getItem('contacts').length > 0) {
+      setContacts(JSON.parse(localStorage.getItem('contacts')));
+      // console.log(JSON.parse(localStorage.getItem('contacts')));
+    }
+
+    // setContacts(localStorage.getItem('contacts'));
+  }, []);
+
+  useEffect(() => {
+    if (didMount.current) {
+      // console.log(contacts);
+      localStorage.setItem('contacts', JSON.stringify(contacts));
+    } else didMount.current = true;
+    // console.log(contacts);
+  }, [contacts]);
 
   const handleSubmit = (e, name, number) => {
     e.preventDefault();
@@ -42,6 +69,7 @@ export const App = () => {
   };
 
   const renderFilter = () => {
+    // console.log(filter);
     filteredList = contacts.filter(contact =>
       contact.name.toLowerCase().includes(filter)
     );
@@ -53,6 +81,7 @@ export const App = () => {
     setContacts(prevState =>
       prevState.filter(contact => contact.id !== contactId)
     );
+    // console.log(JSON.parse(localStorage.getItem('contacts')));
   };
 
   return (
@@ -66,7 +95,7 @@ export const App = () => {
       <h2>Contacts</h2>
       <Filter handleFilter={handleFilter}></Filter>
       <List
-        contacts={filteredList === null ? contacts : renderFilter()}
+        contacts={contacts && renderFilter()}
         deleteContact={deleteContact}
       ></List>
     </div>
